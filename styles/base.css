@@ -6,8 +6,8 @@ body {
 }
 
 body {
-  color: black;
-  background: white;
+  color: var(--clr-dark);
+  background: var(--clr-light);
 }
 
 * {

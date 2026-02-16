@@ -1,12 +1,16 @@
 "use client"
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import gsap from "gsap";
+import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
 
-import initPlanet3D from "@/components/3D/planet"
+import initRobot from "@/components/3D/robot"
+
+gsap.registerPlugin(ScrollToPlugin);
 
 export default function Home() {
 
   useEffect(() => {
-    const {scene, renderer} = initPlanet3D()
+    const {scene, renderer} = initRobot()
     
     return () => {
       if (renderer) {
@@ -16,21 +20,31 @@ export default function Home() {
       }
     }
   }, [])
+
+  const handleCta = useCallback(() => {
+    const hero = document.querySelector(".hero_main") as HTMLElement | null;
+    if (!hero) return;
+    const scrollTarget = hero.offsetTop + hero.offsetHeight;
+    gsap.to(window, {
+      scrollTo: { y: scrollTarget, autoKill: false },
+      duration: 1.6,
+      ease: "power2.inOut",
+    });
+  }, []);
   
   return (
     <div className="page">
       <section className="hero_main">
         <div className="content">
-          <h1>Welcome To The New World</h1>
+          <h1>Cyber Twin</h1>
 
           <p>
-            AI agents that actually bring value to businesses and elevate
-            workers productivity.
+            The version of you that never sleeps.
           </p>
 
-          <button className="cta_btn">Get started.</button>
+          <button className="cta_btn" onClick={handleCta}>Get started.</button>
         </div>
-        <canvas className="planet-3D" />
+        <canvas className="robot-3D" />
       </section>
     </div>
   );

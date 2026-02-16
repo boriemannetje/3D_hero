@@ -1,5 +1,5 @@
 body {
-  font-family: var(--inter), serif;
+  font-family: var(--mono), monospace;
 }
 
 h1,
@@ -19,7 +19,7 @@ h1 {
 
 p {
   font-size: 18px;
-  font-family: var(--inter), serif;
+  font-family: var(--mono), monospace;
   line-height: 150%;
   margin: 0;
 }
