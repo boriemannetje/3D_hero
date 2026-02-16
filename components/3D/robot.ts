@@ -1,198 +1,340 @@
 import gsap from "gsap";
-import ScrollTrigger from "gsap/dist/ScrollTrigger";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-const initRobot = (): {
+type InitRobotResult = {
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
-} => {
+  destroy: () => void;
+};
+
+type CameraFrame = {
+  stage1: {
+    position: { x: number; y: number; z: number };
+    target: { x: number; y: number; z: number };
+  };
+  stage2: {
+    position: { x: number; y: number; z: number };
+    target: { x: number; y: number; z: number };
+  };
+  stage3: {
+    position: { x: number; y: number; z: number };
+    target: { x: number; y: number; z: number };
+  };
+};
+
+const getCameraFrame = (isMobile: boolean): CameraFrame => {
+  if (isMobile) {
+    return {
+      stage1: {
+        position: { x: 0.04, y: 1.04, z: 9.1 },
+        target: { x: 0.02, y: 0.04, z: 0.08 },
+      },
+      stage2: {
+        position: { x: 0.1, y: 1.16, z: 2.2 },
+        target: { x: 0.08, y: 1.02, z: 0.24 },
+      },
+      stage3: {
+        position: { x: 0.68, y: 1.4, z: 0.92 },
+        target: { x: 1.38, y: 1.7, z: -2.4 },
+      },
+    };
+  }
+
+  return {
+    stage1: {
+      position: { x: 0.02, y: 1.08, z: 7.9 },
+      target: { x: 0, y: 0.03, z: 0.06 },
+    },
+    stage2: {
+      position: { x: 0.16, y: 1.15, z: 1.62 },
+      target: { x: 0.05, y: 1.02, z: 0.34 },
+    },
+    stage3: {
+      position: { x: 0.84, y: 1.52, z: 0.56 },
+      target: { x: 1.48, y: 1.8, z: -2.8 },
+    },
+  };
+};
+
+const initRobot = (): InitRobotResult => {
   const canvas = document.querySelector(
     "canvas.robot-3D",
-  ) as HTMLCanvasElement;
+  ) as HTMLCanvasElement | null;
 
-  // Scene
+  if (!canvas) {
+    throw new Error("Missing .robot-3D canvas element");
+  }
+
   const scene = new THREE.Scene();
 
-  // Sizes
   const size = {
     width: window.innerWidth,
     height: window.innerHeight,
-    pixelRatio: window.devicePixelRatio,
+    pixelRatio: Math.min(window.devicePixelRatio, 2),
   };
 
-  // Camera — wide FOV so robot head + text all fit on initial view
+  const cameraFrame = getCameraFrame(window.innerWidth < 768);
+  const cameraRig = { ...cameraFrame.stage1.position };
+  const cameraTargetRig = { ...cameraFrame.stage1.target };
+
   const camera = new THREE.PerspectiveCamera(
-    35,
+    34,
     size.width / size.height,
     0.1,
     1000,
   );
-  // Start further back & slightly above center so the robot head sits
-  // in the lower half of the viewport, leaving the upper area for text + CTA
-  camera.position.set(0, 1.4, 5.5);
-  camera.lookAt(0, 0.6, 0);
+  camera.position.set(cameraRig.x, cameraRig.y, cameraRig.z);
+  camera.lookAt(cameraTargetRig.x, cameraTargetRig.y, cameraTargetRig.z);
   scene.add(camera);
 
-  // Renderer
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(size.width, size.height);
   renderer.setPixelRatio(size.pixelRatio);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.3;
+  renderer.toneMappingExposure = 1.28;
 
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
   scene.add(ambientLight);
 
-  const mainLight = new THREE.DirectionalLight(0xffffff, 2.0);
-  mainLight.position.set(4, 6, 5);
+  const mainLight = new THREE.DirectionalLight(0xffffff, 2.1);
+  mainLight.position.set(4, 6, 4.5);
   scene.add(mainLight);
 
-  const fillLight = new THREE.DirectionalLight(0xb4d4ff, 0.7);
+  const fillLight = new THREE.DirectionalLight(0xbad9ff, 0.65);
   fillLight.position.set(-4, 3, -3);
   scene.add(fillLight);
 
-  const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.95);
   rimLight.position.set(0, 4, -5);
   scene.add(rimLight);
 
-  // Bottom fill — keeps legs / lower body from being too dark
-  const bottomFill = new THREE.DirectionalLight(0xffffff, 0.3);
+  const bottomFill = new THREE.DirectionalLight(0xffffff, 0.34);
   bottomFill.position.set(0, -3, 2);
   scene.add(bottomFill);
 
-  // Load GLB models
   const loader = new GLTFLoader();
   let robotModel: THREE.Group | null = null;
   let humanModel: THREE.Group | null = null;
 
-  const baseYOffset = -0.95; // shared vertical nudge so heads stay below text + CTA
+  const modelRig = {
+    robotBase: new THREE.Vector3(-0.42, -0.98, -0.62),
+    humanBase: new THREE.Vector3(0.4, -1.34, 0.84),
+  };
 
-  // Helper: center & scale a loaded model, place feet at y = 0
-  function placeModel(
-    m: THREE.Group,
-    desiredHeight: number,
-  ) {
-    const box = new THREE.Box3().setFromObject(m);
+  function placeModel(model: THREE.Group, desiredHeight: number) {
+    const box = new THREE.Box3().setFromObject(model);
     const boxSize = box.getSize(new THREE.Vector3());
     const scaleFactor = desiredHeight / boxSize.y;
-    m.scale.setScalar(scaleFactor);
+    model.scale.setScalar(scaleFactor);
 
-    // Recompute after scaling
-    box.setFromObject(m);
+    box.setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
-    m.position.x -= center.x;
-    m.position.z -= center.z;
-    m.position.y -= box.min.y; // feet at y = 0
+    model.position.x -= center.x;
+    model.position.z -= center.z;
+    model.position.y -= box.min.y;
   }
 
-  // Robot (behind)
   loader.load(
     "/Meshy_AI_Cyber_Sentinel_Superi_0215162113_texture.glb",
     (gltf) => {
       robotModel = gltf.scene;
-      placeModel(robotModel, 2.5);
-
-      // Push robot back so it stands behind the human
-      robotModel.position.z -= 0.5;
-      robotModel.position.y += baseYOffset;
-      robotModel.position.x -= 0.5;
-
+      placeModel(robotModel, 2.55);
+      robotModel.position.add(modelRig.robotBase);
+      robotModel.rotation.y = -0.16;
       scene.add(robotModel);
     },
   );
 
-  // Human (in front, facing camera)
-  loader.load(
-    "/male_09_official.glb",
-    (gltf) => {
-      humanModel = gltf.scene;
-      placeModel(humanModel, 1.8); // realistic human height relative to robot
+  loader.load("/male_09_official.glb", (gltf) => {
+    humanModel = gltf.scene;
+    placeModel(humanModel, 1.9);
+    humanModel.position.add(modelRig.humanBase);
+    humanModel.rotation.y = 0.12;
+    scene.add(humanModel);
+  });
 
-      // Position in front of the robot, closer to camera
-      humanModel.position.z += 0.9;
-      humanModel.position.y += baseYOffset;
-      humanModel.position.x += 0.3;
+  let needsRender = true;
+  const hero = document.querySelector(".hero_main") as HTMLElement | null;
 
-      scene.add(humanModel);
+  const timeline = gsap.timeline({
+    scrollTrigger: {
+      id: "hero-scroll",
+      trigger: ".hero_main",
+      start: "top top",
+      end: "+=340%",
+      scrub: 1,
+      pin: true,
+      anticipatePin: 1,
+      snap: {
+        snapTo: "labelsDirectional",
+        duration: { min: 0.4, max: 0.9 },
+        delay: 0.02,
+        ease: "power2.inOut",
+        inertia: false,
+      },
+      onUpdate: ({ progress }) => {
+        needsRender = true;
+        if (!hero) return;
+        if (progress < 0.25) {
+          hero.dataset.stage = "1";
+        } else if (progress < 0.75) {
+          hero.dataset.stage = "2";
+        } else {
+          hero.dataset.stage = "3";
+        }
+      },
     },
-  );
+  });
 
-  // GSAP scroll animations
-  gsap.registerPlugin(ScrollTrigger);
-
-  gsap
-    .timeline({
-      scrollTrigger: {
-        trigger: ".hero_main",
-        start: () => "top top",
-        scrub: 3,
-        anticipatePin: 1,
-        pin: true,
-      },
-    })
+  timeline
+    .addLabel("stage1", 0)
     .to(
-      ".hero_main .content",
+      ".hero_main .stage_intro .content",
       {
-        filter: "blur(40px)",
         autoAlpha: 0,
-        scale: 0.5,
-        duration: 2,
-        ease: "power1.inOut",
+        scale: 0.74,
+        yPercent: -10,
+        duration: 1.0,
+        ease: "power2.inOut",
       },
-      "setting",
+      0.03,
     )
     .to(
-      camera.position,
+      cameraRig,
       {
-        y: 1.0,
-        z: window.innerWidth > 768 ? 3.2 : 4.2,
-        x: 0,
-        duration: 2,
-        ease: "power1.inOut",
+        ...cameraFrame.stage2.position,
+        duration: 1.5,
+        ease: "power2.inOut",
       },
-      "setting",
-    );
+      0,
+    )
+    .to(
+      cameraTargetRig,
+      {
+        ...cameraFrame.stage2.target,
+        duration: 1.5,
+        ease: "power2.inOut",
+      },
+      0,
+    )
+    .fromTo(
+      ".hero_main .stage_access",
+      { autoAlpha: 0, yPercent: 12 },
+      {
+        autoAlpha: 1,
+        yPercent: 0,
+        duration: 1.0,
+        ease: "power2.out",
+      },
+      0.5,
+    )
+    .addLabel("stage2", 1.5)
+    .to(
+      ".hero_main .stage_access",
+      {
+        autoAlpha: 0,
+        yPercent: -11,
+        duration: 0.85,
+        ease: "power2.inOut",
+      },
+      1.75,
+    )
+    .to(
+      cameraRig,
+      {
+        ...cameraFrame.stage3.position,
+        duration: 1.5,
+        ease: "power2.inOut",
+      },
+      1.5,
+    )
+    .to(
+      cameraTargetRig,
+      {
+        ...cameraFrame.stage3.target,
+        duration: 1.5,
+        ease: "power2.inOut",
+      },
+      1.5,
+    )
+    .fromTo(
+      ".hero_main .stage_pricing",
+      { autoAlpha: 0, yPercent: 10 },
+      {
+        autoAlpha: 1,
+        yPercent: 0,
+        duration: 0.9,
+        ease: "power2.out",
+      },
+      2.1,
+    )
+    .addLabel("stage3", 3.0);
 
-  // Idle animation — gentle bob + subtle rotation
-  gsap.ticker.add((time) => {
+  if (hero) {
+    hero.dataset.stage = "1";
+  }
+
+  const tick = (time: number) => {
     if (robotModel) {
-      // Gentle floating bob
       robotModel.position.y =
-        baseYOffset + Math.sin(time * 1.5) * 0.04;
-
-      // Slow subtle Y rotation
-      robotModel.rotation.y = Math.sin(time * 0.5) * 0.15;
+        modelRig.robotBase.y + Math.sin(time * 1.3) * 0.025;
+      robotModel.rotation.y = -0.16 + Math.sin(time * 0.46) * 0.08;
+      needsRender = true;
     }
 
     if (humanModel) {
-      // Very subtle breathing sway
       humanModel.position.y =
-        baseYOffset + Math.sin(time * 1.2 + 0.5) * 0.015;
+        modelRig.humanBase.y + Math.sin(time * 1.05 + 0.7) * 0.012;
+      humanModel.rotation.y = 0.12 + Math.sin(time * 0.34) * 0.02;
+      needsRender = true;
     }
 
-    renderer.render(scene, camera);
-  });
+    camera.position.set(cameraRig.x, cameraRig.y, cameraRig.z);
+    camera.lookAt(cameraTargetRig.x, cameraTargetRig.y, cameraTargetRig.z);
 
+    if (needsRender) {
+      renderer.render(scene, camera);
+      needsRender = false;
+    }
+  };
+
+  gsap.ticker.add(tick);
   gsap.ticker.lagSmoothing(0);
 
-  // Resize
-  window.addEventListener("resize", () => {
-    size.width = window.innerWidth;
-    size.height = window.innerHeight;
-    size.pixelRatio = window.devicePixelRatio;
+  let resizeRaf = 0;
+  const handleResize = () => {
+    cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => {
+      size.width = window.innerWidth;
+      size.height = window.innerHeight;
+      size.pixelRatio = Math.min(window.devicePixelRatio, 2);
 
-    camera.aspect = size.width / size.height;
-    camera.updateProjectionMatrix();
+      camera.aspect = size.width / size.height;
+      camera.updateProjectionMatrix();
 
-    renderer.setSize(size.width, size.height);
-    renderer.setPixelRatio(size.pixelRatio);
-  });
+      renderer.setSize(size.width, size.height);
+      renderer.setPixelRatio(size.pixelRatio);
+      needsRender = true;
+    });
+  };
 
-  return { scene, renderer };
+  window.addEventListener("resize", handleResize);
+
+  const destroy = () => {
+    cancelAnimationFrame(resizeRaf);
+    gsap.ticker.remove(tick);
+    window.removeEventListener("resize", handleResize);
+    timeline.kill();
+    timeline.scrollTrigger?.kill();
+    if (hero) {
+      hero.dataset.stage = "1";
+    }
+  };
+
+  return { scene, renderer, destroy };
 };
 
 export default initRobot;
