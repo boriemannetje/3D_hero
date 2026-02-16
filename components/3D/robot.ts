@@ -159,36 +159,45 @@ const initRobot = (): InitRobotResult => {
   let needsRender = true;
   const hero = document.querySelector(".hero_main") as HTMLElement | null;
 
+  // --- TWEAK: Scroll & transition pacing ---
+  // Higher = more viewport heights to scroll through (the pinned section's scroll range).
+  const SCROLL_DISTANCE_PERCENT = 1000;
+  // Duration of each segment in timeline units. Higher = slower camera/content transition as you scroll.
+  const SEGMENT_DURATION = 2.5;
+  // Ease for scroll-driven transitions. "power2.out" = gentler; "power2.inOut" = more punch.
+  const TIMELINE_EASE = "power2.out" as const;
+
+  const LABELS = ["stage1", "stage2", "stage3"] as const;
+  let currentLabelIndex = 0;
+  let isScrolling = false;
+
   const timeline = gsap.timeline({
     scrollTrigger: {
       id: "hero-scroll",
       trigger: ".hero_main",
       start: "top top",
-      end: "+=340%",
-      scrub: 1,
+      end: `+=${SCROLL_DISTANCE_PERCENT}%`,
+      scrub: 0.1,
       pin: true,
       anticipatePin: 1,
-      snap: {
-        snapTo: "labelsDirectional",
-        duration: { min: 0.4, max: 0.9 },
-        delay: 0.02,
-        ease: "power2.inOut",
-        inertia: false,
-      },
       onUpdate: ({ progress }) => {
         needsRender = true;
         if (!hero) return;
         if (progress < 0.25) {
           hero.dataset.stage = "1";
+          currentLabelIndex = 0;
         } else if (progress < 0.75) {
           hero.dataset.stage = "2";
+          currentLabelIndex = 1;
         } else {
           hero.dataset.stage = "3";
+          currentLabelIndex = 2;
         }
       },
     },
   });
 
+  const d = SEGMENT_DURATION;
   timeline
     .addLabel("stage1", 0)
     .to(
@@ -197,17 +206,17 @@ const initRobot = (): InitRobotResult => {
         autoAlpha: 0,
         scale: 0.74,
         yPercent: -10,
-        duration: 1.0,
-        ease: "power2.inOut",
+        duration: 1.2,
+        ease: TIMELINE_EASE,
       },
-      0.03,
+      0.04,
     )
     .to(
       cameraRig,
       {
         ...cameraFrame.stage2.position,
-        duration: 1.5,
-        ease: "power2.inOut",
+        duration: d,
+        ease: TIMELINE_EASE,
       },
       0,
     )
@@ -215,8 +224,8 @@ const initRobot = (): InitRobotResult => {
       cameraTargetRig,
       {
         ...cameraFrame.stage2.target,
-        duration: 1.5,
-        ease: "power2.inOut",
+        duration: d,
+        ease: TIMELINE_EASE,
       },
       0,
     )
@@ -226,39 +235,39 @@ const initRobot = (): InitRobotResult => {
       {
         autoAlpha: 1,
         yPercent: 0,
-        duration: 1.0,
+        duration: 1.2,
         ease: "power2.out",
       },
-      0.5,
+      0.6,
     )
-    .addLabel("stage2", 1.5)
+    .addLabel("stage2", d)
     .to(
       ".hero_main .stage_access",
       {
         autoAlpha: 0,
         yPercent: -11,
-        duration: 0.85,
-        ease: "power2.inOut",
+        duration: 1.0,
+        ease: TIMELINE_EASE,
       },
-      1.75,
+      d + 0.2,
     )
     .to(
       cameraRig,
       {
         ...cameraFrame.stage3.position,
-        duration: 1.5,
-        ease: "power2.inOut",
+        duration: d,
+        ease: TIMELINE_EASE,
       },
-      1.5,
+      d,
     )
     .to(
       cameraTargetRig,
       {
         ...cameraFrame.stage3.target,
-        duration: 1.5,
-        ease: "power2.inOut",
+        duration: d,
+        ease: TIMELINE_EASE,
       },
-      1.5,
+      d,
     )
     .fromTo(
       ".hero_main .stage_pricing",
@@ -266,16 +275,52 @@ const initRobot = (): InitRobotResult => {
       {
         autoAlpha: 1,
         yPercent: 0,
-        duration: 0.9,
+        duration: 1.1,
         ease: "power2.out",
       },
-      2.1,
+      d + 0.6,
     )
-    .addLabel("stage3", 3.0);
+    .addLabel("stage3", d * 2);
 
   if (hero) {
     hero.dataset.stage = "1";
   }
+
+  // Section-step wheel handler: one scroll gesture = one section transition
+  const handleWheel = (e: WheelEvent) => {
+    const trigger = timeline.scrollTrigger;
+    if (!trigger) return;
+
+    const scrollY = window.scrollY;
+    if (scrollY < trigger.start - 50 || scrollY > trigger.end + 50) return;
+
+    e.preventDefault();
+
+    if (isScrolling) return;
+
+    const direction = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
+    if (direction === 0) return;
+
+    const nextIndex = currentLabelIndex + direction;
+    if (nextIndex < 0 || nextIndex >= LABELS.length) return;
+
+    currentLabelIndex = nextIndex;
+    isScrolling = true;
+
+    const target = trigger.labelToScroll(LABELS[currentLabelIndex]);
+    // TWEAK: duration = total transition time (seconds). "power2.out" = fast start, gentle landing.
+    gsap.to(window, {
+      scrollTo: { y: target, autoKill: false },
+      duration: 2.0,
+      ease: "power2.out",
+      overwrite: "auto",
+      onComplete: () => {
+        isScrolling = false;
+      },
+    });
+  };
+
+  window.addEventListener("wheel", handleWheel, { passive: false });
 
   const tick = (time: number) => {
     if (robotModel) {
@@ -325,6 +370,7 @@ const initRobot = (): InitRobotResult => {
 
   const destroy = () => {
     cancelAnimationFrame(resizeRaf);
+    window.removeEventListener("wheel", handleWheel);
     gsap.ticker.remove(tick);
     window.removeEventListener("resize", handleResize);
     timeline.kill();

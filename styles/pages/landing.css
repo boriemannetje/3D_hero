@@ -105,16 +105,32 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 
-.hero_main .stage_access,
+.hero_main .stage_access {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(5.8rem, 9vh, 7.2rem) clamp(1rem, 5vw, 4rem) 2.2rem;
+  gap: 2rem;
+}
+
 .hero_main .stage_pricing {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   padding: clamp(5.8rem, 9vh, 7.2rem) clamp(1rem, 5vw, 4rem) 2.2rem;
 }
 
-.hero_main .stage_pricing {
-  justify-content: flex-start;
+.hero_main .phone_mockup {
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero_main .phone_mockup img {
+  width: clamp(220px, 22vw, 340px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.25));
 }
 
 .hero_main .stage_header {
@@ -287,11 +303,20 @@
 }
 
 @media (max-width: 900px) {
-  .hero_main .stage_access,
+  .hero_main .stage_access {
+    justify-content: center;
+    align-items: flex-end;
+    padding: clamp(4.5rem, 11vh, 5.2rem) 1rem 1.3rem;
+  }
+
   .hero_main .stage_pricing {
     justify-content: center;
     align-items: flex-end;
     padding: clamp(4.5rem, 11vh, 5.2rem) 1rem 1.3rem;
+  }
+
+  .hero_main .phone_mockup {
+    display: none;
   }
 
   .hero_main .stage_pricing .stage_header,

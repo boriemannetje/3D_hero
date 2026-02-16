@@ -2,6 +2,7 @@
 import gsap from "gsap";
 import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
 import ScrollTrigger from "gsap/dist/ScrollTrigger";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import initRobot from "@/components/3D/robot";
@@ -45,10 +46,11 @@ export default function Home() {
     const scrollTarget = trigger?.labelToScroll(stageLabel);
 
     if (typeof scrollTarget === "number" && Number.isFinite(scrollTarget)) {
+      // TWEAK: duration = total transition time (seconds). "power2.out" = fast start, gentle landing.
       gsap.to(window, {
         scrollTo: { y: scrollTarget, autoKill: false },
-        duration: 1.9,
-        ease: "power3.inOut",
+        duration: 2.4,
+        ease: "power2.out",
         overwrite: "auto",
       });
     }
@@ -97,6 +99,16 @@ export default function Home() {
             aria-label="Cybertwin access controls"
           >
             <h2 className="stage_header">Let your twin handle it.</h2>
+
+            <div className="phone_mockup">
+              <Image
+                src="/phone.png"
+                alt="Cyber Twin chat conversation on a phone"
+                width={340}
+                height={680}
+                priority
+              />
+            </div>
 
             <div className="glass_panel">
               <p className="glass_eyebrow">Access permissions</p>
