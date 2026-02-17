@@ -247,6 +247,22 @@ const initRobot = (): InitRobotResult => {
       placeModel(robotModel, 4.5);
       robotModel.position.add(modelRig.robotBase);
       robotModel.rotation.y = 1.16;
+
+      // Make robot materials shiny/metallic
+      robotModel.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        const materials = Array.isArray(child.material)
+          ? child.material
+          : [child.material];
+        for (const material of materials) {
+          if (material instanceof THREE.MeshStandardMaterial) {
+            material.metalness = 0.44;
+            material.roughness = 0.05;
+            material.needsUpdate = true;
+          }
+        }
+      });
+
       scene.add(robotModel);
 
       animateModelIntro(robotModel, {

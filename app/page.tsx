@@ -191,8 +191,7 @@ export default function Home() {
               </h3>
               {submissionState !== "success" && (
                 <p className="glass_copy">
-                  Drop your email and we will send your invite as soon as the next
-                  build is ready.
+                  Drop your email and we will send you an early access link as soon as your Twin is ready.
                 </p>
               )}
 
