@@ -45,6 +45,41 @@ const getCameraFrame = (isMobile: boolean): CameraFrame => {
   };
 };
 
+const isLowPowerDevice = () => {
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const lowCpu = (navigator.hardwareConcurrency ?? 8) <= 4;
+  const lowMemory = (navigator as Navigator & { deviceMemory?: number })
+    .deviceMemory;
+
+  return coarsePointer || lowCpu || (typeof lowMemory === "number" && lowMemory <= 4);
+};
+
+const disposeMaterial = (material: THREE.Material) => {
+  for (const value of Object.values(material)) {
+    if (value instanceof THREE.Texture) {
+      value.dispose();
+    }
+  }
+  material.dispose();
+};
+
+const disposeObject3D = (object: THREE.Object3D | null) => {
+  if (!object) return;
+
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+
+    child.geometry.dispose();
+
+    if (Array.isArray(child.material)) {
+      child.material.forEach(disposeMaterial);
+      return;
+    }
+
+    disposeMaterial(child.material);
+  });
+};
+
 const initRobot = (): InitRobotResult => {
   const canvas = document.querySelector(
     "canvas.robot-3D",
@@ -55,11 +90,15 @@ const initRobot = (): InitRobotResult => {
   }
 
   const scene = new THREE.Scene();
+  const lowPowerDevice = isLowPowerDevice();
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   const size = {
     width: window.innerWidth,
     height: window.innerHeight,
-    pixelRatio: Math.min(window.devicePixelRatio, 2),
+    pixelRatio: Math.min(window.devicePixelRatio, lowPowerDevice ? 1.25 : 2),
   };
 
   const cameraFrame = getCameraFrame(window.innerWidth < 768);
@@ -76,7 +115,11 @@ const initRobot = (): InitRobotResult => {
   camera.lookAt(cameraTargetRig.x, cameraTargetRig.y, cameraTargetRig.z);
   scene.add(camera);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: !lowPowerDevice,
+    powerPreference: "high-performance",
+  });
   renderer.setSize(size.width, size.height);
   renderer.setPixelRatio(size.pixelRatio);
   renderer.setClearColor(0x000000, 0);
@@ -145,6 +188,7 @@ const initRobot = (): InitRobotResult => {
   });
 
   let needsRender = true;
+  let pageVisible = document.visibilityState !== "hidden";
   const hero = document.querySelector(".hero_main") as HTMLElement | null;
 
   // --- TWEAK: Scroll & transition pacing ---
@@ -268,17 +312,23 @@ const initRobot = (): InitRobotResult => {
   window.addEventListener("wheel", handleWheel, { passive: false });
 
   const tick = (time: number) => {
+    if (!pageVisible) return;
+
     if (robotModel) {
-      robotModel.position.y =
-        modelRig.robotBase.y + Math.sin(time * 1.3) * 0.025;
-      robotModel.rotation.y = -6.12 + Math.sin(time * 0.46) * 0.22;
+      if (!prefersReducedMotion) {
+        robotModel.position.y =
+          modelRig.robotBase.y + Math.sin(time * 1.3) * 0.025;
+        robotModel.rotation.y = -6.12 + Math.sin(time * 0.46) * 0.22;
+      }
       needsRender = true;
     }
 
     if (humanModel) {
-      humanModel.position.y =
-        modelRig.humanBase.y + Math.sin(time * 1.05 + 0.7) * 0.012;
-      humanModel.rotation.y = 6.12 + Math.sin(time * 0.44) * -0.22;
+      if (!prefersReducedMotion) {
+        humanModel.position.y =
+          modelRig.humanBase.y + Math.sin(time * 1.05 + 0.7) * 0.012;
+        humanModel.rotation.y = 6.12 + Math.sin(time * 0.44) * -0.22;
+      }
       needsRender = true;
     }
 
@@ -294,13 +344,20 @@ const initRobot = (): InitRobotResult => {
   gsap.ticker.add(tick);
   gsap.ticker.lagSmoothing(0);
 
+  const handleVisibilityChange = () => {
+    pageVisible = document.visibilityState !== "hidden";
+    if (pageVisible) {
+      needsRender = true;
+    }
+  };
+
   let resizeRaf = 0;
   const handleResize = () => {
     cancelAnimationFrame(resizeRaf);
     resizeRaf = requestAnimationFrame(() => {
       size.width = window.innerWidth;
       size.height = window.innerHeight;
-      size.pixelRatio = Math.min(window.devicePixelRatio, 2);
+      size.pixelRatio = Math.min(window.devicePixelRatio, lowPowerDevice ? 1.25 : 2);
 
       camera.aspect = size.width / size.height;
       camera.updateProjectionMatrix();
@@ -312,14 +369,18 @@ const initRobot = (): InitRobotResult => {
   };
 
   window.addEventListener("resize", handleResize);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   const destroy = () => {
     cancelAnimationFrame(resizeRaf);
     window.removeEventListener("wheel", handleWheel);
     gsap.ticker.remove(tick);
     window.removeEventListener("resize", handleResize);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
     timeline.kill();
     timeline.scrollTrigger?.kill();
+    disposeObject3D(robotModel);
+    disposeObject3D(humanModel);
     if (hero) {
       hero.dataset.stage = "1";
     }

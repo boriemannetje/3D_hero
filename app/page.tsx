@@ -12,9 +12,6 @@ const GOOGLE_FORM_ID = "1FAIpQLSfszxEnXCUbqPpZj1dPVTPyQnk6AH9OqhJSpWJ_ul4nO2mjYg
 const WAITLIST_FORM_URL =
   process.env.NEXT_PUBLIC_WAITLIST_FORM_VIEW_URL ??
   `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform?usp=send_form`;
-const WAITLIST_FORM_EMBED_URL =
-  process.env.NEXT_PUBLIC_WAITLIST_FORM_EMBED_URL ??
-  `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform?embedded=true`;
 const WAITLIST_FORM_ACTION =
   process.env.NEXT_PUBLIC_WAITLIST_FORM_ACTION ??
   `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
@@ -60,7 +57,6 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
   const pendingSubmissionRef = useRef(false);
-  const iframeHasLoadedRef = useRef(false);
   const submitTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -142,11 +138,6 @@ export default function Home() {
   );
 
   const handleHiddenFrameLoad = useCallback(() => {
-    if (!iframeHasLoadedRef.current) {
-      iframeHasLoadedRef.current = true;
-      return;
-    }
-
     if (pendingSubmissionRef.current) {
       completeSubmission("success");
     }
@@ -187,8 +178,9 @@ export default function Home() {
             <iframe
               title="Hidden Google waitlist form"
               name="waitlist_google_form_iframe"
-              src={WAITLIST_FORM_EMBED_URL}
+              src="about:blank"
               className="waitlist_iframe_hidden"
+              loading="lazy"
               tabIndex={-1}
               aria-hidden="true"
               onLoad={handleHiddenFrameLoad}
