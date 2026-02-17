@@ -9,9 +9,6 @@ import initRobot from "@/components/3D/robot";
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 const GOOGLE_FORM_ID = "1FAIpQLSfszxEnXCUbqPpZj1dPVTPyQnk6AH9OqhJSpWJ_ul4nO2mjYg";
-const WAITLIST_FORM_URL =
-  process.env.NEXT_PUBLIC_WAITLIST_FORM_VIEW_URL ??
-  `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform?usp=send_form`;
 const WAITLIST_FORM_ACTION =
   process.env.NEXT_PUBLIC_WAITLIST_FORM_ACTION ??
   `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
@@ -173,7 +170,7 @@ export default function Home() {
             className="stage stage_waitlist"
             aria-label="Join Cyber Twin waitlist"
           >
-            <h2 className="stage_header">We are building. Get early access first.</h2>
+            <h2 className="stage_header">Get early access.</h2>
 
             <iframe
               title="Hidden Google waitlist form"
@@ -187,69 +184,82 @@ export default function Home() {
             />
 
             <div className="glass_panel waitlist_panel">
-              <p className="glass_eyebrow">Early access</p>
-              <h3>Join The Cyber Twin Waitlist</h3>
-              <p className="glass_copy">
-                Drop your email and we will send your invite as soon as the next
-                build is ready.
-              </p>
-
-              <form
-                ref={formRef}
-                className="waitlist_form"
-                action={WAITLIST_FORM_ACTION}
-                method="POST"
-                target="waitlist_google_form_iframe"
-                onSubmit={handleWaitlistSubmit}
-              >
-                <label htmlFor="waitlist_email" className="sr_only">
-                  Email address
-                </label>
-                <input
-                  id="waitlist_email"
-                  name={WAITLIST_EMAIL_FIELD}
-                  type="email"
-                  className="waitlist_input"
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                  required
-                />
-                <button type="submit" className="cta_btn waitlist_submit_btn">
-                  {isSubmitting ? "Joining..." : "Join waitlist"}
-                </button>
-              </form>
-
-              <p className="glass_meta">
+              <p className="glass_eyebrow">CYBER TWIN</p>
+              <h3>
                 {submissionState === "success"
-                  ? "You are in. We will contact you with updates."
-                  : submissionState === "error"
-                    ? "Could not confirm submission. Use the Google Form link below."
-                    : "No spam. Only product updates and invite drops."}
-              </p>
+                  ? "You are on the list."
+                  : "Join The Waitlist"}
+              </h3>
+              {submissionState !== "success" && (
+                <p className="glass_copy">
+                  Drop your email and we will send your invite as soon as the next
+                  build is ready.
+                </p>
+              )}
 
-              <a
-                href={WAITLIST_FORM_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="waitlist_link"
+              <div
+                className={`waitlist_form_shell ${submissionState === "success" ? "is_hidden" : ""}`}
               >
-                Open Google Form
-              </a>
+                <form
+                  ref={formRef}
+                  className="waitlist_form"
+                  action={WAITLIST_FORM_ACTION}
+                  method="POST"
+                  target="waitlist_google_form_iframe"
+                  onSubmit={handleWaitlistSubmit}
+                >
+                  <label htmlFor="waitlist_email" className="sr_only">
+                    Email address
+                  </label>
+                  <input
+                    id="waitlist_email"
+                    name={WAITLIST_EMAIL_FIELD}
+                    type="email"
+                    className="waitlist_input"
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                    required
+                  />
+                  <button type="submit" className="cta_btn waitlist_submit_btn">
+                    {isSubmitting ? "Joining..." : "Join waitlist"}
+                  </button>
+                </form>
+              </div>
 
-              <div className="social_row" aria-label="Social links">
-                {SOCIAL_LINKS.map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="social_btn"
-                    aria-label={social.label}
-                    title={social.label}
-                  >
-                    {social.icon}
-                  </a>
-                ))}
+              {submissionState !== "success" && (
+                <p className="glass_meta">
+                  {submissionState === "error"
+                    ? "Could not confirm submission. Try again."
+                    : "No spam. Only product updates and invite drops."}
+                </p>
+              )}
+
+              <div className="footer_row">
+                <div className="social_block">
+                  <p className="social_hint">Follow for updates</p>
+                  <div className="social_row" aria-label="Social links">
+                    {SOCIAL_LINKS.map((social) => (
+                      <a
+                        key={social.label}
+                        href={social.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="social_btn"
+                        aria-label={social.label}
+                        title={social.label}
+                      >
+                        {social.icon}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+                <p className="project_note">
+                  a{" "}
+                  <a href="https://starboat.app" target="_blank" rel="noreferrer">
+                    starboat
+                  </a>{" "}
+                  project
+                </p>
               </div>
             </div>
           </section>

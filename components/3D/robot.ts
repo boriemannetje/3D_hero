@@ -80,6 +80,78 @@ const disposeObject3D = (object: THREE.Object3D | null) => {
   });
 };
 
+const animateModelIntro = (
+  model: THREE.Group,
+  options: {
+    delay: number;
+    yLift: number;
+    baseY: number;
+    lowPowerDevice: boolean;
+    markDirty: () => void;
+  },
+) => {
+  const { delay, yLift, baseY, lowPowerDevice, markDirty } = options;
+  const materialTargets = new Map<
+    THREE.Material,
+    { opacity: number; transparent: boolean }
+  >();
+
+  model.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+
+    const materials = Array.isArray(child.material)
+      ? child.material
+      : [child.material];
+
+    for (const material of materials) {
+      if (materialTargets.has(material)) continue;
+      materialTargets.set(material, {
+        opacity: material.opacity,
+        transparent: material.transparent,
+      });
+      material.transparent = true;
+      material.opacity = 0;
+      material.needsUpdate = true;
+    }
+  });
+
+  const fromScale = lowPowerDevice ? 0.985 : 0.96;
+  model.scale.multiplyScalar(fromScale);
+  model.position.y = baseY - yLift;
+
+  gsap.to(model.position, {
+    y: baseY,
+    duration: lowPowerDevice ? 0.62 : 0.84,
+    delay,
+    ease: "power2.out",
+    onUpdate: markDirty,
+  });
+
+  gsap.to(model.scale, {
+    x: model.scale.x / fromScale,
+    y: model.scale.y / fromScale,
+    z: model.scale.z / fromScale,
+    duration: lowPowerDevice ? 0.62 : 0.84,
+    delay,
+    ease: "power2.out",
+    onUpdate: markDirty,
+  });
+
+  for (const [material, targetState] of materialTargets) {
+    gsap.to(material, {
+      opacity: targetState.opacity,
+      duration: lowPowerDevice ? 0.54 : 0.76,
+      delay: delay + 0.04,
+      ease: "power1.out",
+      onUpdate: markDirty,
+      onComplete: () => {
+        material.transparent = targetState.transparent;
+        material.needsUpdate = true;
+      },
+    });
+  }
+};
+
 const initRobot = (): InitRobotResult => {
   const canvas = document.querySelector(
     "canvas.robot-3D",
@@ -176,6 +248,16 @@ const initRobot = (): InitRobotResult => {
       robotModel.position.add(modelRig.robotBase);
       robotModel.rotation.y = 1.16;
       scene.add(robotModel);
+
+      animateModelIntro(robotModel, {
+        delay: 0.08,
+        yLift: lowPowerDevice ? 0.04 : 0.08,
+        baseY: modelRig.robotBase.y,
+        lowPowerDevice,
+        markDirty: () => {
+          needsRender = true;
+        },
+      });
     },
   );
 
@@ -185,6 +267,16 @@ const initRobot = (): InitRobotResult => {
     humanModel.position.add(modelRig.humanBase);
     humanModel.rotation.y = 1.12;
     scene.add(humanModel);
+
+    animateModelIntro(humanModel, {
+      delay: 0.2,
+      yLift: lowPowerDevice ? 0.03 : 0.07,
+      baseY: modelRig.humanBase.y,
+      lowPowerDevice,
+      markDirty: () => {
+        needsRender = true;
+      },
+    });
   });
 
   let needsRender = true;
@@ -377,8 +469,9 @@ const initRobot = (): InitRobotResult => {
     gsap.ticker.remove(tick);
     window.removeEventListener("resize", handleResize);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // `timeline.kill()` also disposes its ScrollTrigger; avoid double-kill
+    // because pin teardown mutations can throw in some environments.
     timeline.kill();
-    timeline.scrollTrigger?.kill();
     disposeObject3D(robotModel);
     disposeObject3D(humanModel);
     if (hero) {
