@@ -228,7 +228,7 @@ export default function Home() {
                 <p className="glass_meta">
                   {submissionState === "error"
                     ? "Could not confirm submission. Try again."
-                    : "No spam. Only product updates and invite drops."}
+                    : " "}
                 </p>
               )}
 
