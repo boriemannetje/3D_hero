@@ -170,7 +170,7 @@ export default function Home() {
             className="stage stage_waitlist"
             aria-label="Join Cyber Twin waitlist"
           >
-            <h2 className="stage_header">Get early access.</h2>
+            <h2 className="stage_header">Be the first to have a Cyber Twin.</h2>
 
             <iframe
               title="Hidden Google waitlist form"
@@ -184,11 +184,10 @@ export default function Home() {
             />
 
             <div className="glass_panel waitlist_panel">
-              <p className="glass_eyebrow">CYBER TWIN</p>
               <h3>
                 {submissionState === "success"
                   ? "You are on the list."
-                  : "Join The Waitlist"}
+                  : "Early access Waitlist"}
               </h3>
               {submissionState !== "success" && (
                 <p className="glass_copy">
