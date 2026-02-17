@@ -108,8 +108,8 @@ const initRobot = (): InitRobotResult => {
   let humanModel: THREE.Group | null = null;
 
   const modelRig = {
-    robotBase: new THREE.Vector3(-1.1, -2.0, -0.35),
-    humanBase: new THREE.Vector3(0.9, -1.4, 0.5),
+    robotBase: new THREE.Vector3(-1, -1.0, -1.5),
+    humanBase: new THREE.Vector3(0.7, -2.9, -1),
   };
 
   function placeModel(model: THREE.Group, desiredHeight: number) {
@@ -129,18 +129,18 @@ const initRobot = (): InitRobotResult => {
     "/Meshy_AI_Cyber_Sentinel_Superi_0215162113_texture.glb",
     (gltf) => {
       robotModel = gltf.scene;
-      placeModel(robotModel, 3.4);
+      placeModel(robotModel, 4.5);
       robotModel.position.add(modelRig.robotBase);
-      robotModel.rotation.y = -0.16;
+      robotModel.rotation.y = 1.16;
       scene.add(robotModel);
     },
   );
 
   loader.load("/male_09_official.glb", (gltf) => {
     humanModel = gltf.scene;
-    placeModel(humanModel, 2.8);
+    placeModel(humanModel, 4.1);
     humanModel.position.add(modelRig.humanBase);
-    humanModel.rotation.y = 0.12;
+    humanModel.rotation.y = 1.12;
     scene.add(humanModel);
   });
 
@@ -149,7 +149,7 @@ const initRobot = (): InitRobotResult => {
 
   // --- TWEAK: Scroll & transition pacing ---
   // Higher = more viewport heights to scroll through (the pinned section's scroll range).
-  const SCROLL_DISTANCE_PERCENT = 650;
+  const SCROLL_DISTANCE_PERCENT = 555;
   // Duration of each segment in timeline units. Higher = slower camera/content transition as you scroll.
   const SEGMENT_DURATION = 2.5;
   // Ease for scroll-driven transitions. "power2.out" = gentler; "power2.inOut" = more punch.
@@ -271,14 +271,14 @@ const initRobot = (): InitRobotResult => {
     if (robotModel) {
       robotModel.position.y =
         modelRig.robotBase.y + Math.sin(time * 1.3) * 0.025;
-      robotModel.rotation.y = -0.16 + Math.sin(time * 0.46) * 0.08;
+      robotModel.rotation.y = -6.12 + Math.sin(time * 0.46) * 0.22;
       needsRender = true;
     }
 
     if (humanModel) {
       humanModel.position.y =
         modelRig.humanBase.y + Math.sin(time * 1.05 + 0.7) * 0.012;
-      humanModel.rotation.y = 0.12 + Math.sin(time * 0.34) * 0.02;
+      humanModel.rotation.y = 6.12 + Math.sin(time * 0.44) * -0.22;
       needsRender = true;
     }
 
