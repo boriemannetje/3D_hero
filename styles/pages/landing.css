@@ -105,32 +105,11 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.5);
 }
 
-.hero_main .stage_access {
+.hero_main .stage_waitlist {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: clamp(5.8rem, 9vh, 7.2rem) clamp(1rem, 5vw, 4rem) 2.2rem;
-  gap: 2rem;
-}
-
-.hero_main .stage_pricing {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: clamp(5.8rem, 9vh, 7.2rem) clamp(1rem, 5vw, 4rem) 2.2rem;
-}
-
-.hero_main .phone_mockup {
-  flex-shrink: 0;
-  pointer-events: none;
-  user-select: none;
-}
-
-.hero_main .phone_mockup img {
-  width: clamp(220px, 22vw, 340px);
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.25));
 }
 
 .hero_main .stage_header {
@@ -138,9 +117,9 @@
   top: clamp(1.2rem, 3.6vh, 2.2rem);
   left: 50%;
   transform: translateX(-50%);
-  width: min(92vw, 1100px);
+  width: min(92vw, 980px);
   font-family: var(--apple-garamond), serif;
-  font-size: clamp(2.2rem, 5.8vw, 5.2rem);
+  font-size: clamp(2rem, 5.4vw, 4.6rem);
   letter-spacing: -0.02em;
   line-height: 0.95;
   text-wrap: balance;
@@ -149,14 +128,8 @@
   pointer-events: none;
 }
 
-.hero_main .stage_header_value {
-  width: min(92vw, 960px);
-  font-size: clamp(1.6rem, 3.8vw, 3.2rem);
-}
-
-.hero_main .glass_panel,
-.hero_main .pricing_card {
-  width: min(460px, 92vw);
+.hero_main .glass_panel {
+  width: min(500px, 92vw);
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.42);
   background: linear-gradient(
@@ -170,14 +143,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(20px);
   pointer-events: auto;
+  padding: clamp(1.1rem, 2vw, 1.6rem);
 }
 
-.hero_main .glass_panel {
-  padding: clamp(1.05rem, 2vw, 1.5rem);
-}
-
-.hero_main .glass_eyebrow,
-.hero_main .pricing_eyebrow {
+.hero_main .glass_eyebrow {
   font-size: 0.75rem;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -185,8 +154,7 @@
   margin-bottom: 0.7rem;
 }
 
-.hero_main .glass_panel h3,
-.hero_main .pricing_card h3 {
+.hero_main .glass_panel h3 {
   font-size: clamp(1.45rem, 2.9vw, 2.2rem);
   line-height: 0.95;
   margin-bottom: 0.8rem;
@@ -194,133 +162,133 @@
 }
 
 .hero_main .glass_copy {
-  max-width: 32ch;
-  font-size: 0.84rem;
+  max-width: 36ch;
+  font-size: 0.9rem;
   opacity: 0.84;
   margin-bottom: 1rem;
 }
 
-.hero_main .access_grid {
+.hero_main .waitlist_form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.7rem;
 }
 
-.hero_main .access_chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.16rem;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.42);
-  color: rgba(10, 10, 10, 0.9);
-  padding: 0.66rem 0.72rem;
-  font-family: var(--mono), monospace;
-  font-size: 0.82rem;
-  transition:
-    background-color 0.22s ease,
-    border-color 0.22s ease,
-    transform 0.16s ease,
-    box-shadow 0.22s ease;
-}
-
-.hero_main .access_chip span {
-  font-size: 0.72rem;
-  opacity: 0.7;
-}
-
-.hero_main .access_chip:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.66);
-}
-
-.hero_main .access_chip.is_enabled {
-  border-color: rgba(32, 60, 143, 0.36);
-  background: rgba(215, 232, 255, 0.72);
-  box-shadow: 0 10px 22px rgba(49, 68, 128, 0.2);
-}
-
-.hero_main .glass_meta {
-  margin-top: 0.95rem;
-  font-size: 0.76rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.74;
-}
-
-.hero_main .choose_subscription_btn {
+.hero_main .waitlist_input {
   width: 100%;
-  margin-top: 0.92rem;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(10, 10, 10, 0.9);
+  padding: 0.74rem 0.9rem;
+  font-size: 0.92rem;
+  font-family: var(--mono), monospace;
+  outline: none;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.hero_main .waitlist_input:focus {
+  border-color: rgba(45, 76, 168, 0.42);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 3px rgba(72, 116, 255, 0.16);
+}
+
+.hero_main .waitlist_input::placeholder {
+  color: rgba(17, 17, 17, 0.54);
+}
+
+.hero_main .waitlist_submit_btn {
+  width: 100%;
+  margin-top: 0.05rem;
   padding: 0.72rem 1rem;
   font-size: 0.9rem;
 }
 
-.hero_main .pricing_card {
-  padding: clamp(1.1rem, 2.2vw, 1.8rem);
+.hero_main .glass_meta {
+  margin-top: 0.9rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.74;
 }
 
-.hero_main .price {
-  margin: 0.8rem 0 0.9rem;
-  font-size: clamp(2.1rem, 7vw, 3.2rem);
-  line-height: 0.9;
+.hero_main .waitlist_link {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-family: var(--mono), monospace;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+  opacity: 0.82;
 }
 
-.hero_main .price span {
-  font-size: clamp(1rem, 2vw, 1.1rem);
-  margin-left: 0.28rem;
-  opacity: 0.72;
-}
-
-.hero_main .pricing_card ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.55rem;
-  font-size: 0.84rem;
-}
-
-.hero_main .pricing_card li {
-  position: relative;
-  padding-left: 1rem;
-}
-
-.hero_main .pricing_card li::before {
-  content: "";
-  position: absolute;
-  top: 0.4rem;
-  left: 0;
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 999px;
-  background: rgba(18, 18, 18, 0.82);
-}
-
-.hero_main .pricing_cta {
+.hero_main .social_row {
   margin-top: 1rem;
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.hero_main .social_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.56);
+  color: rgba(12, 12, 12, 0.92);
+  transition:
+    transform 0.18s ease,
+    background-color 0.2s ease,
+    box-shadow 0.22s ease;
+}
+
+.hero_main .social_btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentcolor;
+}
+
+.hero_main .social_btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 12px 24px rgba(18, 30, 72, 0.12);
+}
+
+.hero_main .sr_only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.hero_main .waitlist_iframe_hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {
-  .hero_main .stage_access {
+  .hero_main .stage_waitlist {
     justify-content: center;
     align-items: flex-end;
     padding: clamp(4.5rem, 11vh, 5.2rem) 1rem 1.3rem;
   }
 
-  .hero_main .stage_pricing {
-    justify-content: center;
-    align-items: flex-end;
-    padding: clamp(4.5rem, 11vh, 5.2rem) 1rem 1.3rem;
-  }
-
-  .hero_main .phone_mockup {
-    display: none;
-  }
-
-  .hero_main .stage_pricing .stage_header,
-  .hero_main .stage_access .stage_header {
+  .hero_main .stage_waitlist .stage_header {
     top: 1rem;
   }
 }
@@ -334,18 +302,17 @@
     padding-top: 2.6rem;
   }
 
-  .hero_main .glass_panel h3,
-  .hero_main .pricing_card h3 {
+  .hero_main .glass_panel h3 {
     font-size: 1.42rem;
   }
 
   .hero_main .stage_header {
-    font-size: clamp(1.7rem, 8.8vw, 2.6rem);
+    font-size: clamp(1.6rem, 8.6vw, 2.45rem);
     top: 0.95rem;
   }
 
-  .hero_main .stage_header_value {
-    font-size: clamp(1.24rem, 5.7vw, 1.8rem);
+  .hero_main .social_row {
+    gap: 0.45rem;
   }
 }
 
@@ -354,12 +321,7 @@
   visibility: visible;
 }
 
-.hero_main[data-stage="2"] .stage_access {
-  opacity: 1;
-  visibility: visible;
-}
-
-.hero_main[data-stage="3"] .stage_pricing {
+.hero_main[data-stage="2"] .stage_waitlist {
   opacity: 1;
   visibility: visible;
 }

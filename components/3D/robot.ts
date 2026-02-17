@@ -17,10 +17,6 @@ type CameraFrame = {
     position: { x: number; y: number; z: number };
     target: { x: number; y: number; z: number };
   };
-  stage3: {
-    position: { x: number; y: number; z: number };
-    target: { x: number; y: number; z: number };
-  };
 };
 
 const getCameraFrame = (isMobile: boolean): CameraFrame => {
@@ -31,12 +27,8 @@ const getCameraFrame = (isMobile: boolean): CameraFrame => {
         target: { x: 0.02, y: 0.04, z: 0.08 },
       },
       stage2: {
-        position: { x: 0.1, y: 1.16, z: 2.2 },
-        target: { x: 0.08, y: 1.02, z: 0.24 },
-      },
-      stage3: {
-        position: { x: 0.68, y: 1.4, z: 0.92 },
-        target: { x: 1.38, y: 1.7, z: -2.4 },
+        position: { x: 0.0, y: 1.35, z: 1.55 },
+        target: { x: 0.0, y: 1.18, z: 0.0 },
       },
     };
   }
@@ -47,12 +39,8 @@ const getCameraFrame = (isMobile: boolean): CameraFrame => {
       target: { x: 0, y: 0.03, z: 0.06 },
     },
     stage2: {
-      position: { x: 0.16, y: 1.15, z: 1.62 },
-      target: { x: 0.05, y: 1.02, z: 0.34 },
-    },
-    stage3: {
-      position: { x: 0.84, y: 1.52, z: 0.56 },
-      target: { x: 1.48, y: 1.8, z: -2.8 },
+      position: { x: 0.0, y: 1.35, z: 1.15 },
+      target: { x: 0.0, y: 1.18, z: 0.0 },
     },
   };
 };
@@ -120,8 +108,8 @@ const initRobot = (): InitRobotResult => {
   let humanModel: THREE.Group | null = null;
 
   const modelRig = {
-    robotBase: new THREE.Vector3(-0.42, -0.98, -0.62),
-    humanBase: new THREE.Vector3(0.4, -1.34, 0.84),
+    robotBase: new THREE.Vector3(-1.1, -2.0, -0.35),
+    humanBase: new THREE.Vector3(0.9, -1.4, 0.5),
   };
 
   function placeModel(model: THREE.Group, desiredHeight: number) {
@@ -141,7 +129,7 @@ const initRobot = (): InitRobotResult => {
     "/Meshy_AI_Cyber_Sentinel_Superi_0215162113_texture.glb",
     (gltf) => {
       robotModel = gltf.scene;
-      placeModel(robotModel, 2.55);
+      placeModel(robotModel, 3.4);
       robotModel.position.add(modelRig.robotBase);
       robotModel.rotation.y = -0.16;
       scene.add(robotModel);
@@ -150,7 +138,7 @@ const initRobot = (): InitRobotResult => {
 
   loader.load("/male_09_official.glb", (gltf) => {
     humanModel = gltf.scene;
-    placeModel(humanModel, 1.9);
+    placeModel(humanModel, 2.8);
     humanModel.position.add(modelRig.humanBase);
     humanModel.rotation.y = 0.12;
     scene.add(humanModel);
@@ -161,13 +149,13 @@ const initRobot = (): InitRobotResult => {
 
   // --- TWEAK: Scroll & transition pacing ---
   // Higher = more viewport heights to scroll through (the pinned section's scroll range).
-  const SCROLL_DISTANCE_PERCENT = 1000;
+  const SCROLL_DISTANCE_PERCENT = 650;
   // Duration of each segment in timeline units. Higher = slower camera/content transition as you scroll.
   const SEGMENT_DURATION = 2.5;
   // Ease for scroll-driven transitions. "power2.out" = gentler; "power2.inOut" = more punch.
   const TIMELINE_EASE = "power2.out" as const;
 
-  const LABELS = ["stage1", "stage2", "stage3"] as const;
+  const LABELS = ["stage1", "stage2"] as const;
   let currentLabelIndex = 0;
   let isScrolling = false;
 
@@ -183,15 +171,12 @@ const initRobot = (): InitRobotResult => {
       onUpdate: ({ progress }) => {
         needsRender = true;
         if (!hero) return;
-        if (progress < 0.25) {
+        if (progress < 0.5) {
           hero.dataset.stage = "1";
           currentLabelIndex = 0;
-        } else if (progress < 0.75) {
+        } else {
           hero.dataset.stage = "2";
           currentLabelIndex = 1;
-        } else {
-          hero.dataset.stage = "3";
-          currentLabelIndex = 2;
         }
       },
     },
@@ -230,7 +215,7 @@ const initRobot = (): InitRobotResult => {
       0,
     )
     .fromTo(
-      ".hero_main .stage_access",
+      ".hero_main .stage_waitlist",
       { autoAlpha: 0, yPercent: 12 },
       {
         autoAlpha: 1,
@@ -240,47 +225,7 @@ const initRobot = (): InitRobotResult => {
       },
       0.6,
     )
-    .addLabel("stage2", d)
-    .to(
-      ".hero_main .stage_access",
-      {
-        autoAlpha: 0,
-        yPercent: -11,
-        duration: 1.0,
-        ease: TIMELINE_EASE,
-      },
-      d + 0.2,
-    )
-    .to(
-      cameraRig,
-      {
-        ...cameraFrame.stage3.position,
-        duration: d,
-        ease: TIMELINE_EASE,
-      },
-      d,
-    )
-    .to(
-      cameraTargetRig,
-      {
-        ...cameraFrame.stage3.target,
-        duration: d,
-        ease: TIMELINE_EASE,
-      },
-      d,
-    )
-    .fromTo(
-      ".hero_main .stage_pricing",
-      { autoAlpha: 0, yPercent: 10 },
-      {
-        autoAlpha: 1,
-        yPercent: 0,
-        duration: 1.1,
-        ease: "power2.out",
-      },
-      d + 0.6,
-    )
-    .addLabel("stage3", d * 2);
+    .addLabel("stage2", d);
 
   if (hero) {
     hero.dataset.stage = "1";
