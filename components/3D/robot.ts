@@ -23,8 +23,9 @@ const getCameraFrame = (isMobile: boolean): CameraFrame => {
   if (isMobile) {
     return {
       stage1: {
-        position: { x: 0.04, y: 1.04, z: 9.1 },
-        target: { x: 0.02, y: 0.04, z: 0.08 },
+        // Position camera higher and look upward to push models lower on screen
+        position: { x: 0.04, y: 1.8, z: 9.1 },
+        target: { x: 0.02, y: 0.8, z: 0.08 },
       },
       stage2: {
         position: { x: 0.0, y: 1.35, z: 1.55 },
@@ -35,8 +36,9 @@ const getCameraFrame = (isMobile: boolean): CameraFrame => {
 
   return {
     stage1: {
-      position: { x: 0.02, y: 1.08, z: 7.9 },
-      target: { x: 0, y: 0.03, z: 0.06 },
+      // Position camera higher and look upward to push models lower on screen
+      position: { x: 0.02, y: 1.9, z: 7.9 },
+      target: { x: 0, y: 0.9, z: 0.06 },
     },
     stage2: {
       position: { x: 0.0, y: 1.35, z: 1.15 },
@@ -301,7 +303,9 @@ const initRobot = (): InitRobotResult => {
 
   // --- TWEAK: Scroll & transition pacing ---
   // Higher = more viewport heights to scroll through (the pinned section's scroll range).
-  const SCROLL_DISTANCE_PERCENT = 555;
+  // Reduced on mobile for fewer swipe gestures needed
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+  const SCROLL_DISTANCE_PERCENT = isTouchDevice ? 280 : 555;
   // Duration of each segment in timeline units. Higher = slower camera/content transition as you scroll.
   const SEGMENT_DURATION = 2.5;
   // Ease for scroll-driven transitions. "power2.out" = gentler; "power2.inOut" = more punch.
@@ -320,10 +324,25 @@ const initRobot = (): InitRobotResult => {
       scrub: 0.1,
       pin: true,
       anticipatePin: 1,
+      snap: {
+        snapTo: (progress) => {
+          // Snap to nearest stage (0 = stage1, ~0.69 = stage2 based on SEGMENT_DURATION)
+          const stage2Progress = SEGMENT_DURATION / (SEGMENT_DURATION + 1.2);
+          const snapPoints = [0, stage2Progress];
+          const nearest = snapPoints.reduce((prev, curr) =>
+            Math.abs(curr - progress) < Math.abs(prev - progress) ? curr : prev
+          );
+          return nearest;
+        },
+        duration: { min: 0.15, max: 0.35 },
+        delay: 0,
+        ease: "power2.out",
+      },
       onUpdate: ({ progress }) => {
         needsRender = true;
         if (!hero) return;
-        if (progress < 0.5) {
+        const stage2Progress = SEGMENT_DURATION / (SEGMENT_DURATION + 1.2);
+        if (progress < stage2Progress / 2) {
           hero.dataset.stage = "1";
           currentLabelIndex = 0;
         } else {
@@ -383,41 +402,45 @@ const initRobot = (): InitRobotResult => {
     hero.dataset.stage = "1";
   }
 
-  // Section-step wheel handler: one scroll gesture = one section transition
-  const handleWheel = (e: WheelEvent) => {
-    const trigger = timeline.scrollTrigger;
-    if (!trigger) return;
+  // Wheel handler for desktop - snaps to sections
+  // Note: Touch devices use ScrollTrigger's snap instead
+  let wheelHandler: ((e: WheelEvent) => void) | null = null;
+  
+  if (!isTouchDevice) {
+    wheelHandler = (e: WheelEvent) => {
+      const trigger = timeline.scrollTrigger;
+      if (!trigger) return;
 
-    const scrollY = window.scrollY;
-    if (scrollY < trigger.start - 50 || scrollY > trigger.end + 50) return;
+      const scrollY = window.scrollY;
+      if (scrollY < trigger.start - 50 || scrollY > trigger.end + 50) return;
 
-    e.preventDefault();
+      e.preventDefault();
 
-    if (isScrolling) return;
+      if (isScrolling) return;
 
-    const direction = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
-    if (direction === 0) return;
+      const direction = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
+      if (direction === 0) return;
 
-    const nextIndex = currentLabelIndex + direction;
-    if (nextIndex < 0 || nextIndex >= LABELS.length) return;
+      const nextIndex = currentLabelIndex + direction;
+      if (nextIndex < 0 || nextIndex >= LABELS.length) return;
 
-    currentLabelIndex = nextIndex;
-    isScrolling = true;
+      currentLabelIndex = nextIndex;
+      isScrolling = true;
 
-    const target = trigger.labelToScroll(LABELS[currentLabelIndex]);
-    // TWEAK: duration = total transition time (seconds). "power2.out" = fast start, gentle landing.
-    gsap.to(window, {
-      scrollTo: { y: target, autoKill: false },
-      duration: 2.0,
-      ease: "power2.out",
-      overwrite: "auto",
-      onComplete: () => {
-        isScrolling = false;
-      },
-    });
-  };
+      const target = trigger.labelToScroll(LABELS[currentLabelIndex]);
+      gsap.to(window, {
+        scrollTo: { y: target, autoKill: false },
+        duration: 1.2,
+        ease: "power2.out",
+        overwrite: "auto",
+        onComplete: () => {
+          isScrolling = false;
+        },
+      });
+    };
 
-  window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", wheelHandler, { passive: false });
+  }
 
   const tick = (time: number) => {
     if (!pageVisible) return;
@@ -481,7 +504,9 @@ const initRobot = (): InitRobotResult => {
 
   const destroy = () => {
     cancelAnimationFrame(resizeRaf);
-    window.removeEventListener("wheel", handleWheel);
+    if (wheelHandler) {
+      window.removeEventListener("wheel", wheelHandler);
+    }
     gsap.ticker.remove(tick);
     window.removeEventListener("resize", handleResize);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
