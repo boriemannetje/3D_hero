@@ -385,8 +385,20 @@ const initRobot = (): InitRobotResult => {
       },
       0,
     )
+    .set(".hero_main .stage_waitlist", { opacity: 1, visibility: "visible" }, 0.6)
     .fromTo(
-      ".hero_main .stage_waitlist",
+      ".hero_main .stage_header",
+      { autoAlpha: 0, yPercent: 12 },
+      {
+        autoAlpha: 1,
+        yPercent: 0,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      0.6,
+    )
+    .fromTo(
+      ".hero_main .glass_panel",
       { autoAlpha: 0, yPercent: 12 },
       {
         autoAlpha: 1,
