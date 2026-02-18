@@ -44,6 +44,30 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(2.8rem, 9vh, 6.2rem);
+  position: relative;
+}
+
+.hero_main .credits_trigger {
+  position: absolute;
+  bottom: clamp(0.9rem, 2.4vh, 1.6rem);
+  right: clamp(0.9rem, 2.4vw, 1.6rem);
+  font-family: var(--mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 50;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: rgba(14, 14, 12, 0.5);
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.2s ease;
+  z-index: 5;
+}
+
+.hero_main .credits_trigger:hover {
+  color: rgba(14, 14, 12, 0.85);
 }
 
 .hero_main .content {
@@ -106,17 +130,15 @@
 }
 
 .hero_main .stage_waitlist {
+  --waitlist-inset: clamp(2rem, 5.5vh, 3.5rem);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding: clamp(5.8rem, 9vh, 7.2rem) clamp(1rem, 5vw, 4rem) 2.2rem;
+  padding: var(--waitlist-inset) clamp(1rem, 5vw, 4rem) 3.2rem;
+  gap: var(--waitlist-inset);
 }
 
 .hero_main .stage_header {
-  position: absolute;
-  top: clamp(1.2rem, 3.6vh, 2.2rem);
-  left: 50%;
-  transform: translateX(-50%);
   width: min(92vw, 980px);
   font-family: var(--apple-garamond), serif;
   font-size: clamp(2rem, 5.4vw, 4.6rem);
@@ -128,7 +150,8 @@
   pointer-events: none;
 }
 
-.hero_main .glass_panel {
+.hero_main .glass_panel,
+.credits_panel.glass_panel {
   width: min(500px, 92vw);
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.42);
@@ -141,8 +164,8 @@
   box-shadow:
     0 20px 65px rgba(16, 16, 24, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   pointer-events: auto;
   padding: clamp(1.1rem, 2vw, 1.6rem);
 }
@@ -155,14 +178,16 @@
   margin-bottom: 0.7rem;
 }
 
-.hero_main .glass_panel h3 {
+.hero_main .glass_panel h3,
+.credits_panel.glass_panel h3 {
   font-size: clamp(1.45rem, 2.9vw, 2.2rem);
   line-height: 0.95;
   margin-bottom: 0.8rem;
   font-weight: 500;
 }
 
-.hero_main .glass_copy {
+.hero_main .glass_copy,
+.credits_body .glass_copy {
   max-width: 36ch;
   font-size: 0.9rem;
   opacity: 0.84;
@@ -329,16 +354,8 @@
 
 @media (max-width: 900px) {
   .hero_main .stage_waitlist {
-    justify-content: center;
-    /* On smaller screens, keep the waitlist panel higher on the page,
-       sitting visually just under the stage header instead of hugging
-       the bottom of the viewport. */
-    align-items: flex-start;
-    padding: clamp(4.8rem, 14vh, 6.4rem) 1rem 1.3rem;
-  }
-
-  .hero_main .stage_waitlist .stage_header {
-    top: 1rem;
+    --waitlist-inset: clamp(1.35rem, 4vh, 2rem);
+    padding: var(--waitlist-inset) 1rem 1.9rem;
   }
 }
 
@@ -357,12 +374,115 @@
 
   .hero_main .stage_header {
     font-size: clamp(1.6rem, 8.6vw, 2.45rem);
-    top: 0.95rem;
   }
 
   .hero_main .social_row {
     gap: 0.45rem;
   }
+}
+
+/* Credits overlay */
+.credits_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+.credits_overlay.is_open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0s;
+}
+
+.credits_backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 14, 12, 0.35);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.credits_overlay.is_open .credits_backdrop {
+  opacity: 1;
+}
+
+.credits_panel {
+  position: relative;
+  width: min(500px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  transition:
+    opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.credits_overlay.is_open .credits_panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.credits_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.credits_close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: rgba(14, 14, 12, 0.7);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.credits_close:hover {
+  color: var(--clr-dark);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.credits_body {
+  opacity: 0.84;
+}
+
+.credits_body .glass_copy:last-child {
+  margin-bottom: 0;
+}
+
+.credits_body a {
+  color: var(--clr-dark);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  font-weight: 500;
+}
+
+.credits_body a:hover {
+  opacity: 0.85;
 }
 
 .hero_main[data-stage="1"] .stage_intro {

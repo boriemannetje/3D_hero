@@ -52,9 +52,14 @@ type SubmissionState = "idle" | "success" | "error";
 export default function Home() {
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
   const pendingSubmissionRef = useRef(false);
   const submitTimeoutRef = useRef<number | null>(null);
+
+  const closeCredits = useCallback(() => {
+    setCreditsOpen(false);
+  }, []);
 
   useEffect(() => {
     const { renderer, destroy } = initRobot();
@@ -148,6 +153,15 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!creditsOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeCredits();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [creditsOpen, closeCredits]);
+
   return (
     <div className="page">
       <section className="hero_main" data-stage="1">
@@ -165,6 +179,15 @@ export default function Home() {
               </button>
             </div>
           </section>
+
+          <button
+            type="button"
+            className="credits_trigger"
+            onClick={() => setCreditsOpen(true)}
+            aria-label="View credits"
+          >
+            credits
+          </button>
 
           <section
             className="stage stage_waitlist"
@@ -191,7 +214,7 @@ export default function Home() {
               </h3>
               {submissionState !== "success" && (
                 <p className="glass_copy">
-                  We will send you an early access link as soon as your Twin is ready.
+                  We will send you an early access link before anyone else.
                 </p>
               )}
 
@@ -263,6 +286,60 @@ export default function Home() {
           </section>
         </div>
       </section>
+
+      <div
+        className={`credits_overlay ${creditsOpen ? "is_open" : ""}`}
+        role="dialog"
+        aria-modal={creditsOpen}
+        aria-hidden={!creditsOpen}
+        aria-labelledby="credits_title"
+      >
+        <div className="credits_backdrop" onClick={closeCredits} aria-hidden="true" />
+        <div className="credits_panel glass_panel">
+          <div className="credits_header">
+            <h3 id="credits_title">Acknowledgements</h3>
+            <button
+              type="button"
+              className="credits_close"
+              onClick={closeCredits}
+              aria-label="Close credits"
+            >
+              ×
+            </button>
+          </div>
+          <div className="credits_body">
+            <p className="glass_copy">
+              This site uses the{" "}
+              <a href="https://github.com/Robinzon100/3D_hero" target="_blank" rel="noreferrer">
+                Robinzon100/3D_hero
+              </a>{" "}
+              project as a template.
+            </p>
+            <p className="glass_copy">
+              3D character:{" "}
+              <a href="https://skfb.ly/pEsvx" target="_blank" rel="noreferrer">
+                Male_09 (official)
+              </a>{" "}
+              by photon (that one larry), licensed under{" "}
+              <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+                Creative Commons Attribution
+              </a>
+              .
+            </p>
+            <p className="glass_copy">
+              Cyber Twin is a project by{" "}
+              <a href="https://www.linkedin.com/in/jordan-gallant-a47b40207/" target="_blank" rel="noreferrer">
+                Jordan Gallant
+              </a>{" "}
+              &{" "}
+              <a href="https://www.linkedin.com/in/boris-de-wit-5ab536200/" target="_blank" rel="noreferrer">
+                Boris de Wit
+              </a>
+              . Website by Boris.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

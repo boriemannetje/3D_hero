@@ -325,15 +325,7 @@ const initRobot = (): InitRobotResult => {
       pin: true,
       anticipatePin: 1,
       snap: {
-        snapTo: (progress) => {
-          // Snap to nearest stage (0 = stage1, ~0.69 = stage2 based on SEGMENT_DURATION)
-          const stage2Progress = SEGMENT_DURATION / (SEGMENT_DURATION + 1.2);
-          const snapPoints = [0, stage2Progress];
-          const nearest = snapPoints.reduce((prev, curr) =>
-            Math.abs(curr - progress) < Math.abs(prev - progress) ? curr : prev
-          );
-          return nearest;
-        },
+        snapTo: "labels",
         duration: { min: 0.15, max: 0.35 },
         delay: 0,
         ease: "power2.out",
@@ -341,8 +333,7 @@ const initRobot = (): InitRobotResult => {
       onUpdate: ({ progress }) => {
         needsRender = true;
         if (!hero) return;
-        const stage2Progress = SEGMENT_DURATION / (SEGMENT_DURATION + 1.2);
-        if (progress < stage2Progress / 2) {
+        if (progress < 0.5) {
           hero.dataset.stage = "1";
           currentLabelIndex = 0;
         } else {
