@@ -2,13 +2,15 @@
 import gsap from "gsap";
 import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
 import ScrollTrigger from "gsap/dist/ScrollTrigger";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import initRobot from "@/components/3D/robot";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
-const GOOGLE_FORM_ID = "1FAIpQLSfszxEnXCUbqPpZj1dPVTPyQnk6AH9OqhJSpWJ_ul4nO2mjYg";
+const GOOGLE_FORM_ID =
+  "1FAIpQLSfszxEnXCUbqPpZj1dPVTPyQnk6AH9OqhJSpWJ_ul4nO2mjYg";
 const WAITLIST_FORM_ACTION =
   process.env.NEXT_PUBLIC_WAITLIST_FORM_ACTION ??
   `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
@@ -50,7 +52,8 @@ const SOCIAL_LINKS = [
 type SubmissionState = "idle" | "success" | "error";
 
 export default function Home() {
-  const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
+  const [submissionState, setSubmissionState] =
+    useState<SubmissionState>("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -114,7 +117,8 @@ export default function Home() {
       }
 
       const form = event.currentTarget;
-      const emailInput = form.querySelector<HTMLInputElement>("#waitlist_email");
+      const emailInput =
+        form.querySelector<HTMLInputElement>("#waitlist_email");
       const email = emailInput?.value.trim();
 
       if (!email) {
@@ -173,6 +177,39 @@ export default function Home() {
               <h1>Cyber Twin</h1>
 
               <p>The version of you that never sleeps.</p>
+
+              <div className="infra_labels">
+                <span className="infra_chip">
+                  <Image
+                    src="/logos/solana.svg"
+                    alt=""
+                    width={14}
+                    height={14}
+                    aria-hidden="true"
+                  />
+                  <span>Solana</span>
+                </span>
+                <span className="infra_chip infra_chip_x402">
+                  <Image
+                    src="/logos/x402.svg"
+                    alt=""
+                    width={31}
+                    height={12}
+                    aria-hidden="true"
+                  />
+                  <span>x402</span>
+                </span>
+                <span className="infra_chip">
+                  <Image
+                    src="/logos/usdc.svg"
+                    alt=""
+                    width={14}
+                    height={14}
+                    aria-hidden="true"
+                  />
+                  <span>stablecoin</span>
+                </span>
+              </div>
 
               <button type="button" className="cta_btn" onClick={handleCta}>
                 Join waitlist.
@@ -258,7 +295,7 @@ export default function Home() {
               <div className="footer_row">
                 <div className="social_block">
                   <p className="social_hint">Follow for updates</p>
-                  <div className="social_row" aria-label="Social links">
+                  <div className="social_row">
                     {SOCIAL_LINKS.map((social) => (
                       <a
                         key={social.label}
@@ -276,7 +313,11 @@ export default function Home() {
                 </div>
                 <p className="project_note">
                   a{" "}
-                  <a href="https://starboat.app" target="_blank" rel="noreferrer">
+                  <a
+                    href="https://starboat.app"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     starboat
                   </a>{" "}
                   project
@@ -294,7 +335,11 @@ export default function Home() {
         aria-hidden={!creditsOpen}
         aria-labelledby="credits_title"
       >
-        <div className="credits_backdrop" onClick={closeCredits} aria-hidden="true" />
+        <div
+          className="credits_backdrop"
+          onClick={closeCredits}
+          aria-hidden="true"
+        />
         <div className="credits_panel glass_panel">
           <div className="credits_header">
             <h3 id="credits_title">Acknowledgements</h3>
@@ -310,7 +355,11 @@ export default function Home() {
           <div className="credits_body">
             <p className="glass_copy">
               This site uses the{" "}
-              <a href="https://github.com/Robinzon100/3D_hero" target="_blank" rel="noreferrer">
+              <a
+                href="https://github.com/Robinzon100/3D_hero"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Robinzon100/3D_hero
               </a>{" "}
               project as a template.
@@ -321,18 +370,30 @@ export default function Home() {
                 Male_09 (official)
               </a>{" "}
               by photon (that one larry), licensed under{" "}
-              <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+              <a
+                href="http://creativecommons.org/licenses/by/4.0/"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Creative Commons Attribution
               </a>
               .
             </p>
             <p className="glass_copy">
               Cyber Twin is a project by{" "}
-              <a href="https://www.linkedin.com/in/jordan-gallant-a47b40207/" target="_blank" rel="noreferrer">
+              <a
+                href="https://www.linkedin.com/in/jordan-gallant-a47b40207/"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Jordan Gallant
               </a>{" "}
               &{" "}
-              <a href="https://www.linkedin.com/in/boris-de-wit-5ab536200/" target="_blank" rel="noreferrer">
+              <a
+                href="https://www.linkedin.com/in/boris-de-wit-5ab536200/"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Boris de Wit
               </a>
               . Website by Boris.
